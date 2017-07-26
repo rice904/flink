@@ -29,7 +29,7 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.fs.FSDataOutputStream;
 import org.apache.flink.core.fs.FileSystem.WriteMode;
 import org.apache.flink.core.fs.Path;
-import org.apache.flink.runtime.fs.hdfs.HadoopFileSystem;
+import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.runtime.state.CheckpointListener;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
@@ -47,11 +47,6 @@ import org.apache.flink.streaming.runtime.tasks.ProcessingTimeService;
 import org.apache.flink.util.Preconditions;
 
 import org.apache.commons.lang3.time.StopWatch;
-//import org.apache.hadoop.fs.FSDataOutputStream;
-//import org.apache.hadoop.fs.FileSystem;
-//import org.apache.hadoop.fs.Path;
-//import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.flink.core.fs.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -334,7 +329,7 @@ public class BucketingSink<T>
 	 * Specify a custom {@code Configuration} that will be used when creating
 	 * the {@link FileSystem} for writing.
 	 */
-	public BucketingSink<T> setFSConfig(org.apache.hadoop.conf.Configuration config) {
+	public BucketingSink<T> setFSConfig(Configuration config) {
 		this.fsConfig = new Configuration();
 		for (Map.Entry<String, String> entry : config) {
 			fsConfig.setString(entry.getKey(), entry.getValue());

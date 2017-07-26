@@ -18,9 +18,9 @@
 
 package org.apache.flink.streaming.connectors.fs.bucketing;
 
+import org.apache.flink.core.fs.Path;
 import org.apache.flink.streaming.connectors.fs.Clock;
 
-import org.apache.hadoop.fs.Path;
 
 /**
  * A {@link Bucketer} that does not perform any

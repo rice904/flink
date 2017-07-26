@@ -18,13 +18,17 @@
 
 package org.apache.flink.streaming.connectors.fs;
 
+import org.apache.commons.io.Charsets;
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.OperatorStateStore;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.InputTypeConfigurable;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.runtime.fs.hdfs.HadoopFileSystem;
+import org.apache.flink.core.fs.FSDataOutputStream;
+import org.apache.flink.core.fs.FileSystem;
+import org.apache.flink.core.fs.FileSystem.WriteMode;
+import org.apache.flink.core.fs.Path;
 import org.apache.flink.runtime.state.CheckpointListener;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
@@ -35,10 +39,6 @@ import org.apache.flink.streaming.connectors.fs.bucketing.BucketingSink;
 import org.apache.flink.util.Preconditions;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -386,16 +386,7 @@ public class RollingSink<T> extends RichSinkFunction<T>
 		if (fs != null) {
 			return;
 		}
-		org.apache.hadoop.conf.Configuration hadoopConf = HadoopFileSystem.getHadoopConfiguration();
-		if (fsConfig != null) {
-			String disableCacheName = String.format("fs.%s.impl.disable.cache", new Path(basePath).toUri().getScheme());
-			hadoopConf.setBoolean(disableCacheName, true);
-			for (String key : fsConfig.keySet()) {
-				hadoopConf.set(key, fsConfig.getString(key, null));
-			}
-		}
-
-		fs = new Path(basePath).getFileSystem(hadoopConf);
+		fs = new Path(basePath).getFileSystem();
 	}
 
 	@Override
@@ -544,8 +535,8 @@ public class RollingSink<T> extends RichSinkFunction<T>
 			FSDataOutputStream outputStream;
 			Path testPath = new Path(UUID.randomUUID().toString());
 			try {
-				outputStream = fs.create(testPath);
-				outputStream.writeUTF("hello");
+				outputStream = fs.create(testPath, WriteMode.OVERWRITE);
+				outputStream.write("hello".getBytes(Charsets.UTF_8));
 				outputStream.close();
 			} catch (IOException e) {
 				LOG.error("Could not create file for checking if truncate works.", e);
@@ -663,25 +654,25 @@ public class RollingSink<T> extends RichSinkFunction<T>
 					LOG.debug("Truncating {} to valid length {}", partPath, bucketState.currentFileValidLength);
 					// some-one else might still hold the lease from a previous try, we are
 					// recovering, after all ...
-					if (fs instanceof DistributedFileSystem) {
-						DistributedFileSystem dfs = (DistributedFileSystem) fs;
-						LOG.debug("Trying to recover file lease {}", partPath);
-						dfs.recoverLease(partPath);
-						boolean isclosed = dfs.isFileClosed(partPath);
-						StopWatch sw = new StopWatch();
-						sw.start();
-						while (!isclosed) {
-							if (sw.getTime() > asyncTimeout) {
-								break;
-							}
-							try {
-								Thread.sleep(500);
-							} catch (InterruptedException e1) {
-								// ignore it
-							}
-							isclosed = dfs.isFileClosed(partPath);
-						}
-					}
+//					if (fs instanceof DistributedFileSystem) {
+//						DistributedFileSystem dfs = (DistributedFileSystem) fs;
+//						LOG.debug("Trying to recover file lease {}", partPath);
+//						dfs.recoverLease(partPath);
+//						boolean isclosed = dfs.isFileClosed(partPath);
+//						StopWatch sw = new StopWatch();
+//						sw.start();
+//						while (!isclosed) {
+//							if (sw.getTime() > asyncTimeout) {
+//								break;
+//							}
+//							try {
+//								Thread.sleep(500);
+//							} catch (InterruptedException e1) {
+//								// ignore it
+//							}
+//							isclosed = dfs.isFileClosed(partPath);
+//						}
+//					}
 					Boolean truncated = (Boolean) refTruncate.invoke(fs, partPath, bucketState.currentFileValidLength);
 					if (!truncated) {
 						LOG.debug("Truncate did not immediately complete for {}, waiting...", partPath);
@@ -710,8 +701,8 @@ public class RollingSink<T> extends RichSinkFunction<T>
 					LOG.debug("Writing valid-length file for {} to specify valid length {}", partPath, bucketState.currentFileValidLength);
 					Path validLengthFilePath = getValidLengthPathFor(partPath);
 					if (!fs.exists(validLengthFilePath) && fs.exists(partPath)) {
-						FSDataOutputStream lengthFileOut = fs.create(validLengthFilePath);
-						lengthFileOut.writeUTF(Long.toString(bucketState.currentFileValidLength));
+						FSDataOutputStream lengthFileOut = fs.create(validLengthFilePath, WriteMode.OVERWRITE);
+						lengthFileOut.write(Long.toString(bucketState.currentFileValidLength).getBytes(Charsets.UTF_8));
 						lengthFileOut.close();
 					}
 				}

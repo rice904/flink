@@ -18,7 +18,7 @@
 
 package org.apache.flink.streaming.connectors.fs;
 
-import org.apache.hadoop.fs.Path;
+import org.apache.flink.core.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

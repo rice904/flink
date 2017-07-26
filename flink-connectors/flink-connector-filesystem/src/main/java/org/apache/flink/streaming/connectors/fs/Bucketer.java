@@ -18,9 +18,8 @@
 
 package org.apache.flink.streaming.connectors.fs;
 
-import org.apache.hadoop.fs.Path;
-
 import java.io.Serializable;
+import org.apache.flink.core.fs.Path;
 
 /**
  * A bucketer is used with a {@link RollingSink}
