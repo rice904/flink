@@ -149,4 +149,14 @@ public class SafetyNetWrapperFileSystem extends FileSystem implements WrappingPr
 	public FileSystem getWrappedDelegate() {
 		return unsafeFileSystem;
 	}
+
+	@Override
+	public void truncate(Path f, long newLength) {
+
+	}
+
+	@Override
+	public boolean supportsTruncate() {
+		return false;
+	}
 }

@@ -18,10 +18,9 @@
 
 package org.apache.flink.streaming.connectors.fs;
 
+import org.apache.flink.core.fs.FileSystem;
+import org.apache.flink.core.fs.Path;
 import org.apache.flink.streaming.connectors.fs.bucketing.BucketingSink;
-
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.io.Serializable;

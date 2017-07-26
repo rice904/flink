@@ -471,4 +471,14 @@ public final class HadoopFileSystem extends FileSystem implements HadoopFileSyst
 		}
 		return clazz;
 	}
+
+	@Override
+	public void truncate(Path f, long newLength) {
+
+	}
+
+	@Override
+	public boolean supportsTruncate() {
+		return false;
+	}
 }

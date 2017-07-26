@@ -289,4 +289,14 @@ public class LocalFileSystem extends FileSystem {
 	public boolean isDistributedFS() {
 		return false;
 	}
+
+	@Override
+	public void truncate(Path f, long newLength) {
+
+	}
+
+	@Override
+	public boolean supportsTruncate() {
+		return false;
+	}
 }

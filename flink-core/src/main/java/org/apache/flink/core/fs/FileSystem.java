@@ -659,6 +659,21 @@ public abstract class FileSystem {
 	 */
 	public abstract boolean isDistributedFS();
 
+	/**
+	 * Truncate the file in the indicated path to the indicated size.
+	 *
+	 * @param f The path to the file to be truncated
+	 * @param newLength The size the file is to be truncated to
+	 */
+	public abstract void truncate(Path f, long newLength);
+
+	/**
+	 * Returns true if the file system support truncate.
+	 *
+	 * @return <code>true</code> if the file system support truncate.
+	 */
+	public abstract boolean supportsTruncate();
+
 	// ------------------------------------------------------------------------
 	//  output directory initialization
 	// ------------------------------------------------------------------------

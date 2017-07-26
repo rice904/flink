@@ -385,4 +385,14 @@ public final class MapRFileSystem extends FileSystem {
 
 		return true;
 	}
+
+	@Override
+	public void truncate(Path f, long newLength) {
+
+	}
+
+	@Override
+	public boolean supportsTruncate() {
+		return false;
+	}
 }
