@@ -46,48 +46,48 @@ import static org.powermock.api.mockito.PowerMockito.when;
  * {@link TaskManagerServices}. See FLINK-8212 for more information.
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(EnvironmentInformation.class)
+@PrepareForTest(EnvironmentInformation.MemoryInformation.class)
 @Category(OldAndFlip6.class)
 public class NetworkBufferCalculationTest extends TestLogger {
 
 	/**
-	 * Test for {@link TaskManagerServices#calculateNetworkBufferMemory(TaskManagerServicesConfiguration)}
+	 * Test for {@link TaskManagerServices#calculateNetworkBufferMemory(TaskManagerServicesConfiguration, EnvironmentInformation.MemoryInformation)}
 	 * using the same (manual) test cases as in {@link TaskManagerServicesTest#calculateHeapSizeMB()}.
 	 */
 	@Test
 	public void calculateNetworkBufFromHeapSize() throws Exception {
-		PowerMockito.mockStatic(EnvironmentInformation.class);
+		PowerMockito.mockStatic(EnvironmentInformation.MemoryInformation.class);
 		// some defaults:
-		when(EnvironmentInformation.getSizeOfFreeHeapMemoryWithDefrag()).thenReturn(1000L << 20); // 1000MB
-		when(EnvironmentInformation.getMaxJvmHeapMemory()).thenReturn(1000L << 20); // 1000MB
+		when(EnvironmentInformation.MemoryInformation.getFreeHeapMemoryWithDefrag()).thenReturn(1000L << 20); // 1000MB
+		when(EnvironmentInformation.MemoryInformation.getMaxJvmHeapMemory()).thenReturn(1000L << 20); // 1000MB
 
 		TaskManagerServicesConfiguration tmConfig;
 
 		tmConfig = getTmConfig(TaskManagerOptions.MANAGED_MEMORY_SIZE.defaultValue(),
 			TaskManagerOptions.MANAGED_MEMORY_FRACTION.defaultValue(),
 			0.1f, 60L << 20, 1L << 30, MemoryType.HEAP);
-		when(EnvironmentInformation.getMaxJvmHeapMemory()).thenReturn(900L << 20); // 900MB
+		when(EnvironmentInformation.MemoryInformation.getMaxJvmHeapMemory()).thenReturn(900L << 20); // 900MB
 		assertEquals((100L << 20) + 1 /* one too many due to floating point imprecision */,
-			TaskManagerServices.calculateNetworkBufferMemory(tmConfig));
+			TaskManagerServices.calculateNetworkBufferMemory(tmConfig, EnvironmentInformation.getMemoryInformation()));
 
 		tmConfig = getTmConfig(TaskManagerOptions.MANAGED_MEMORY_SIZE.defaultValue(),
 			TaskManagerOptions.MANAGED_MEMORY_FRACTION.defaultValue(),
 			0.2f, 60L << 20, 1L << 30, MemoryType.HEAP);
-		when(EnvironmentInformation.getMaxJvmHeapMemory()).thenReturn(800L << 20); // 800MB
+		when(EnvironmentInformation.MemoryInformation.getMaxJvmHeapMemory()).thenReturn(800L << 20); // 800MB
 		assertEquals((200L << 20) + 3 /* slightly too many due to floating point imprecision */,
-			TaskManagerServices.calculateNetworkBufferMemory(tmConfig));
+			TaskManagerServices.calculateNetworkBufferMemory(tmConfig, EnvironmentInformation.getMemoryInformation()));
 
 		tmConfig = getTmConfig(10, TaskManagerOptions.MANAGED_MEMORY_FRACTION.defaultValue(),
 			0.1f, 60L << 20, 1L << 30, MemoryType.OFF_HEAP);
-		when(EnvironmentInformation.getMaxJvmHeapMemory()).thenReturn(890L << 20); // 890MB
+		when(EnvironmentInformation.MemoryInformation.getMaxJvmHeapMemory()).thenReturn(890L << 20); // 890MB
 		assertEquals((100L << 20) + 1 /* one too many due to floating point imprecision */,
-			TaskManagerServices.calculateNetworkBufferMemory(tmConfig));
+			TaskManagerServices.calculateNetworkBufferMemory(tmConfig, EnvironmentInformation.getMemoryInformation()));
 
 		tmConfig = getTmConfig(-1, 0.1f,
 			0.1f, 60L << 20, 1L << 30, MemoryType.OFF_HEAP);
-		when(EnvironmentInformation.getMaxJvmHeapMemory()).thenReturn(810L << 20); // 810MB
+		when(EnvironmentInformation.MemoryInformation.getMaxJvmHeapMemory()).thenReturn(810L << 20); // 810MB
 		assertEquals((100L << 20) + 1 /* one too many due to floating point imprecision */,
-			TaskManagerServices.calculateNetworkBufferMemory(tmConfig));
+			TaskManagerServices.calculateNetworkBufferMemory(tmConfig, EnvironmentInformation.getMemoryInformation()));
 	}
 
 	/**

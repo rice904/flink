@@ -285,7 +285,8 @@ public class TaskManagerRunner implements FatalErrorHandler {
 
 		TaskManagerServices taskManagerServices = TaskManagerServices.fromConfiguration(
 			taskManagerServicesConfiguration,
-			resourceID);
+			resourceID,
+			EnvironmentInformation.getMemoryInformation());
 
 		TaskManagerMetricGroup taskManagerMetricGroup = MetricUtils.instantiateTaskManagerMetricGroup(
 			metricRegistry,

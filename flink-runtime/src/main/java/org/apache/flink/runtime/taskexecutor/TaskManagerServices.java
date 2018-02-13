@@ -158,13 +158,14 @@ public class TaskManagerServices {
 	 * @throws Exception
 	 */
 	public static TaskManagerServices fromConfiguration(
-			TaskManagerServicesConfiguration taskManagerServicesConfiguration,
-			ResourceID resourceID) throws Exception {
+		TaskManagerServicesConfiguration taskManagerServicesConfiguration,
+		ResourceID resourceID,
+		EnvironmentInformation.MemoryInformation memoryInformation) throws Exception {
 
 		// pre-start checks
 		checkTempDirs(taskManagerServicesConfiguration.getTmpDirPaths());
 
-		final NetworkEnvironment network = createNetworkEnvironment(taskManagerServicesConfiguration);
+		final NetworkEnvironment network = createNetworkEnvironment(taskManagerServicesConfiguration, memoryInformation);
 		network.start();
 
 		final TaskManagerLocation taskManagerLocation = new TaskManagerLocation(
@@ -173,7 +174,7 @@ public class TaskManagerServices {
 			network.getConnectionManager().getDataPort());
 
 		// this call has to happen strictly after the network stack has been initialized
-		final MemoryManager memoryManager = createMemoryManager(taskManagerServicesConfiguration);
+		final MemoryManager memoryManager = createMemoryManager(taskManagerServicesConfiguration, memoryInformation);
 
 		// start the I/O manager, it will create some temp directories.
 		final IOManager ioManager = new IOManagerAsync(taskManagerServicesConfiguration.getTmpDirPaths());
@@ -218,7 +219,8 @@ public class TaskManagerServices {
 	 * @return Memory manager
 	 * @throws Exception
 	 */
-	private static MemoryManager createMemoryManager(TaskManagerServicesConfiguration taskManagerServicesConfiguration) throws Exception {
+	private static MemoryManager createMemoryManager(TaskManagerServicesConfiguration taskManagerServicesConfiguration,
+													 EnvironmentInformation.MemoryInformation memoryInformation) throws Exception {
 		// computing the amount of memory to use depends on how much memory is available
 		// it strictly needs to happen AFTER the network stack has been initialized
 
@@ -244,7 +246,7 @@ public class TaskManagerServices {
 
 			if (memType == MemoryType.HEAP) {
 				// network buffers allocated off-heap -> use memoryFraction of the available heap:
-				long relativeMemSize = (long) (EnvironmentInformation.getSizeOfFreeHeapMemoryWithDefrag() * memoryFraction);
+				long relativeMemSize = (long) (memoryInformation.getFreeHeapMemoryWithDefrag() * memoryFraction);
 				if (preAllocateMemory) {
 					LOG.info("Using {} of the currently free heap space for managed heap memory ({} MB)." ,
 						memoryFraction , relativeMemSize >> 20);
@@ -258,7 +260,7 @@ public class TaskManagerServices {
 				// calculateHeapSizeMB(long totalJavaMemorySizeMB, Configuration config)), i.e.
 				// maxJvmHeap = jvmTotalNoNet - jvmTotalNoNet * memoryFraction = jvmTotalNoNet * (1 - memoryFraction)
 				// directMemorySize = jvmTotalNoNet * memoryFraction
-				long maxJvmHeap = EnvironmentInformation.getMaxJvmHeapMemory();
+				long maxJvmHeap = memoryInformation.getMaxJvmHeapMemory();
 				long directMemorySize = (long) (maxJvmHeap / (1.0 - memoryFraction) * memoryFraction);
 				if (preAllocateMemory) {
 					LOG.info("Using {} of the maximum memory size for managed off-heap memory ({} MB)." ,
@@ -305,11 +307,12 @@ public class TaskManagerServices {
 	 * @throws IOException
 	 */
 	private static NetworkEnvironment createNetworkEnvironment(
-			TaskManagerServicesConfiguration taskManagerServicesConfiguration) throws IOException {
+			TaskManagerServicesConfiguration taskManagerServicesConfiguration,
+			EnvironmentInformation.MemoryInformation memoryInformation) throws IOException {
 
 		NetworkEnvironmentConfiguration networkEnvironmentConfiguration = taskManagerServicesConfiguration.getNetworkConfig();
 
-		final long networkBuf = calculateNetworkBufferMemory(taskManagerServicesConfiguration);
+		final long networkBuf = calculateNetworkBufferMemory(taskManagerServicesConfiguration, memoryInformation);
 		int segmentSize = networkEnvironmentConfiguration.networkBufferSize();
 
 		// tolerate offcuts between intended and allocated memory due to segmentation (will be available to the user-space memory)
@@ -478,7 +481,8 @@ public class TaskManagerServices {
 	 *
 	 * @return memory to use for network buffers (in bytes)
 	 */
-	public static long calculateNetworkBufferMemory(TaskManagerServicesConfiguration tmConfig) {
+	public static long calculateNetworkBufferMemory(TaskManagerServicesConfiguration tmConfig,
+													EnvironmentInformation.MemoryInformation memoryInformation) {
 		final NetworkEnvironmentConfiguration networkConfig = tmConfig.getNetworkConfig();
 
 		final float networkBufFraction = networkConfig.networkBufFraction();
@@ -498,7 +502,7 @@ public class TaskManagerServices {
 
 		final MemoryType memType = tmConfig.getMemoryType();
 
-		final long maxMemory = EnvironmentInformation.getMaxJvmHeapMemory();
+		final long maxMemory = memoryInformation.getMaxJvmHeapMemory();
 
 		final long jvmHeapNoNet;
 		if (memType == MemoryType.HEAP) {

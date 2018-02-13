@@ -2014,7 +2014,8 @@ object TaskManager {
 
     val taskManagerServices = TaskManagerServices.fromConfiguration(
       taskManagerServicesConfiguration,
-      resourceID)
+      resourceID,
+      EnvironmentInformation.getMemoryInformation())
 
     val taskManagerMetricGroup = MetricUtils.instantiateTaskManagerMetricGroup(
       metricRegistry,
