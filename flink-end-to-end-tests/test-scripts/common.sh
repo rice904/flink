@@ -180,23 +180,7 @@ function s3_put {
     https://${bucket}.s3.amazonaws.com/${s3_file}
 }
 
-function s3_delete {
-  bucket=$1
-  s3_file=$2
-  resource="/${bucket}/${s3_file}"
-  contentType="application/octet-stream"
-  dateValue=`date -R`
-  stringToSign="DELETE\n\n${contentType}\n${dateValue}\n${resource}"
-  s3Key=$ARTIFACTS_AWS_ACCESS_KEY
-  s3Secret=$ARTIFACTS_AWS_SECRET_KEY
-  signature=`echo -en ${stringToSign} | openssl sha1 -hmac ${s3Secret} -binary | base64`
-  curl -X DELETE \
-    -H "Host: ${bucket}.s3.amazonaws.com" \
-    -H "Date: ${dateValue}" \
-    -H "Content-Type: ${contentType}" \
-    -H "Authorization: AWS ${s3Key}:${signature}" \
-    https://${bucket}.s3.amazonaws.com/${s3_file}
-}
+
 
 # make sure to clean up even in case of failures
 function cleanup {
