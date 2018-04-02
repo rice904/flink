@@ -19,7 +19,10 @@
 
 package test;
 
+import akka.remote.serialization.ProtobufSerializer;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.typeutils.runtime.kryo.JavaSerializer;
+import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
@@ -34,7 +37,10 @@ public class KryoTesting {
 	public static void main(String[] args) throws Exception {
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
+		env.getConfig().setParallelism(1);
 		env.registerTypeWithKryoSerializer(Student.class, StudentSerializer.class);
+
+		env.setParallelism(1);
 
 		Student student1 =  new Student("beijing", "lisi", 23);
 		Student student2 =  new Student("shanghai", "wangwu", 27);
@@ -44,7 +50,6 @@ public class KryoTesting {
 		Student student6 =  new Student("shanghai", "Hurry", 21);
 		Student student7 =  new Student("beijing", "lisiqw", 29);
 
-
 		DataStream<Tuple2<String, Integer>> dataStream = env
 			.fromElements(student1, student2, student3, student4, student5, student6, student7)
 			.flatMap(new StudentProcess())
@@ -52,6 +57,7 @@ public class KryoTesting {
 			.sum(1);
 
 		dataStream.print();
+
 		env.execute();
 
 	}

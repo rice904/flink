@@ -23,18 +23,38 @@ import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+
 /**
- *
+ * Default Serializers
  */
 public class StudentSerializer extends Serializer<Student> {
 
-	@Override
-	public void write(Kryo kryo, Output output, Student object) {
+	private static String path = "/Users/zhangminglei/projects/flink/flink-end-to-end-tests/flink-kryo-keyedstate/src/resources/file.dat";
 
+	@Override
+	public void write(Kryo kryo, Output output, Student student) {
+		try {
+			output =
+				new Output(new FileOutputStream(path));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		kryo.writeObject(output, student);
+		output.flush();
+		output.close();
 	}
 
 	@Override
-	public Student read(Kryo kryo, Input input, Class<Student> type) {
-		return null;
+	public Student read(Kryo kryo, Input input, Class<Student> studentClass) {
+		try {
+			input = new Input(new FileInputStream(path));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		Student student = kryo.readObject(input, studentClass);
+		return student;
 	}
 }
