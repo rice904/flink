@@ -16,18 +16,18 @@
  * limitations under the License.
  */
 
-package test;
+package org.apache.flink.keyed.state.kryo;
 
 import java.io.Serializable;
 
-public class Student implements Serializable {
+public class DummyEntity implements Serializable {
 	private String address;
 	private String name;
 	private int age;
 
-	public Student() {}
+	public DummyEntity() {}
 
-	public Student(String address, String name, int age) {
+	public DummyEntity(String address, String name, int age) {
 		this.address = address;
 		this.name = name;
 		this.age = age;
@@ -59,7 +59,7 @@ public class Student implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Student{" +
+		return "DummyEntity{" +
 			"address='" + address + '\'' +
 			", name='" + name + '\'' +
 			", age=" + age +

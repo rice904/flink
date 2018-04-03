@@ -16,56 +16,47 @@
  * limitations under the License.
  */
 
+package org.apache.flink.keyed.state.kryo;
 
-package test;
-
-import akka.remote.serialization.ProtobufSerializer;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.typeutils.runtime.kryo.JavaSerializer;
-import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.util.Collector;
 
 /**
- *  Sum up according to address. The same addresses will be grouped.
+ *
  */
-public class KryoTesting {
+public class KeyedStateKryoTestProgram {
 
 	public static void main(String[] args) throws Exception {
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-
+		env.registerTypeWithKryoSerializer(DummyEntity.class, DummyEntitySerializer.class);
 		env.getConfig().setParallelism(1);
-		env.registerTypeWithKryoSerializer(Student.class, StudentSerializer.class);
 
-		env.setParallelism(1);
-
-		Student student1 =  new Student("beijing", "lisi", 23);
-		Student student2 =  new Student("shanghai", "wangwu", 27);
-		Student student3 =  new Student("shanghai", "stephn", 21);
-		Student student4 =  new Student("shanghai", "stephn", 21);
-		Student student5 =  new Student("nanjing", "stephn", 21);
-		Student student6 =  new Student("shanghai", "Hurry", 21);
-		Student student7 =  new Student("beijing", "lisiqw", 29);
+		DummyEntity dummyEntity1 = new DummyEntity("address1", "name1", 23);
+		DummyEntity dummyEntity2 = new DummyEntity("address2", "name2", 27);
+		DummyEntity dummyEntity3 = new DummyEntity("address3", "name3", 21);
+		DummyEntity dummyEntity4 = new DummyEntity("address2", "name2", 21);
+		DummyEntity dummyEntity5 = new DummyEntity("address2", "name4", 21);
+		DummyEntity dummyEntity6 = new DummyEntity("address8", "name7", 21);
+		DummyEntity dummyEntity7 = new DummyEntity("address8", "name7", 29);
 
 		DataStream<Tuple2<String, Integer>> dataStream = env
-			.fromElements(student1, student2, student3, student4, student5, student6, student7)
-			.flatMap(new StudentProcess())
+			.fromElements(dummyEntity1, dummyEntity2, dummyEntity3, dummyEntity4, dummyEntity5, dummyEntity6, dummyEntity7)
+			.flatMap(new EntityProcessFunction())
+			// here we can use address as a key for grouping.
 			.keyBy(0)
 			.sum(1);
 
 		dataStream.print();
-
 		env.execute();
-
 	}
 
-	public static class StudentProcess implements FlatMapFunction<Student, Tuple2<String, Integer>> {
+	public static class EntityProcessFunction implements FlatMapFunction<DummyEntity, Tuple2<String, Integer>> {
 		@Override
-		public void flatMap(Student stu, Collector<Tuple2<String, Integer>> out) throws Exception {
-				out.collect(new Tuple2<String, Integer>(stu.getAddress(), 1));
+		public void flatMap(DummyEntity dummyEntity, Collector<Tuple2<String, Integer>> out) throws Exception {
+				out.collect(new Tuple2<String, Integer>(dummyEntity.getAddress(), 1));
 		}
 	}
 }

@@ -16,45 +16,33 @@
  * limitations under the License.
  */
 
-package test;
+package org.apache.flink.keyed.state.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-
 /**
- * Default Serializers
+ * A Custom Serializer.
  */
-public class StudentSerializer extends Serializer<Student> {
-
-	private static String path = "/Users/zhangminglei/projects/flink/flink-end-to-end-tests/flink-kryo-keyedstate/src/resources/file.dat";
+public class DummyEntitySerializer extends Serializer<DummyEntity> {
 
 	@Override
-	public void write(Kryo kryo, Output output, Student student) {
-		try {
-			output =
-				new Output(new FileOutputStream(path));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		kryo.writeObject(output, student);
+	public void write(Kryo kryo, Output output, DummyEntity dummyEntity) {
+		output.writeString(dummyEntity.getAddress());
+		output.writeString(dummyEntity.getName());
+		output.writeInt(dummyEntity.getAge());
 		output.flush();
 		output.close();
 	}
 
 	@Override
-	public Student read(Kryo kryo, Input input, Class<Student> studentClass) {
-		try {
-			input = new Input(new FileInputStream(path));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		Student student = kryo.readObject(input, studentClass);
-		return student;
+	public DummyEntity read(Kryo kryo, Input input, Class<DummyEntity> dummyEntityClass) {
+		DummyEntity dummyEntity = new DummyEntity();
+		dummyEntity.setAddress(input.readString());
+		dummyEntity.setName(input.readString());
+		dummyEntity.setAge(input.readInt());
+		return dummyEntity;
 	}
 }
